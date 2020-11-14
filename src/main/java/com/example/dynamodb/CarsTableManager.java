@@ -6,6 +6,7 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
@@ -24,6 +25,7 @@ public class CarsTableManager {
     public static void main(String[] args) {
         _deleteTableIfExists();
         _createTable();
+        _loadData();
     }
 
     private static void _deleteTableIfExists() {
@@ -66,5 +68,27 @@ public class CarsTableManager {
         catch (Exception e) {
             System.err.println("Failed to create table: " + e.getMessage());
         }
+    }
+
+    private static void _loadData() {
+        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(SERVICE_END_POINT, SIGNING_REGION))
+                .build();
+        DynamoDB dynamoDB = new DynamoDB(client);
+
+        Table table = dynamoDB.getTable(TABLE_NAME);
+
+        try {
+            table.putItem(new Item()
+                    .withPrimaryKey(ATTR_YEAR, 2020, ATTR_MODEL, "Beat")
+                    .withJSON("info", "{\"manufacturer\" : \"General Motors\"}"));
+            System.out.println("PutItem succeeded.");
+
+        }
+        catch (Exception e) {
+            System.err.println("Failed to add car.");
+            System.err.println(e.getMessage());
+        }
+
     }
 }
